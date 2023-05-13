@@ -1,0 +1,139 @@
+// game 1 version 2 // in p5js // player moves with arrows only // ememies move down only // button version does not run without html file
+
+let player;
+let enemies = [];
+
+function setup() {
+  const button = document.getElementById("startButton");
+  button.addEventListener("click", startGame); // add event listener to the button
+}
+
+function startGame() {
+  const button = document.getElementById("startButton");
+  button.style.display = "none"; // hide the button
+  createCanvas(800, 600);
+  player = new Player(width/2, height/2, 5, 20);
+  createEnemies();
+  loop(); // start the game loop
+
+  // create a button to return to the main menu
+  const returnButton = document.createElement("button");
+  returnButton.innerHTML = "Return to Main Menu";
+  returnButton.addEventListener("click", function() {
+    window.location.reload(); // reload the page to go back to the main menu
+  });
+  document.body.appendChild(returnButton);
+}
+function draw() {
+  background(0);
+  if (player) { // check if player exists before using it
+    player.display();
+    player.update();
+    for (let i = 0; i < enemies.length; i++) {
+      let enemy = enemies[i];
+      enemy.display();
+      enemy.update();
+      if (player.collidesWith(enemy)) {
+        if (player.size < enemy.size) {
+          textSize(32);
+          fill(255, 255, 0);
+          text("Game Over", width/2 - 80, height/2);
+          noLoop();
+        } else {
+          player.size += enemy.size;
+          enemy.size = 0;
+        }
+      }
+    }
+  }
+  moveEnemies();
+  displayEnemies();
+  if (frameCount % 30 == 0) {
+    let enemy = new Enemy(random(50, width-50), random(-500, -50), random(5, 50));
+    enemies.push(enemy);
+  }
+}
+
+function keyPressed() {
+  if (keyCode == LEFT_ARROW) {
+    player.x -= player.speed;
+  } else if (keyCode == RIGHT_ARROW) {
+    player.x += player.speed;
+  }
+}
+
+function mouseClicked() {
+  if (player) { // check if player exists before using it
+    let angle = atan2(mouseY - player.y, mouseX - player.x);
+    player.x += cos(angle) * player.speed;
+    player.y += sin(angle) * player.speed;
+  }
+}
+
+class Player {
+  constructor(x, y, speed, size) {
+    this.x = x;
+    this.y = y;
+    this.speed = speed;
+    this.size = size;
+  }
+
+  display() {
+    fill(255, 0, 0);
+    ellipse(this.x, this.y, this.size, this.size);
+  }
+
+  update() {
+    if (keyIsPressed) {
+      if (keyCode == LEFT_ARROW) {
+        this.x -= this.speed;
+      } else if (keyCode == RIGHT_ARROW) {
+        this.x += this.speed;
+      }
+    }
+  }
+
+  collidesWith(enemy) {
+    let distance = dist(this.x, this.y, enemy.x, enemy.y);
+    return distance < (this.size/2 + enemy.size/2);
+  }
+}
+
+class Enemy {
+  constructor(x, y, size) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+  }
+
+  display() {
+    fill(255, 0, 0);
+    ellipse(this.x, this.y, this.size, this.size);
+  }
+
+  update() {
+    this.y += 2;
+  }
+}
+
+function createEnemies() {
+  for (let i = 0; i < 10; i++) {
+    let x = random(50, width-50);
+    let y = random(-500, -50);
+    let size = random(5, 50);
+    let enemy = new Enemy(x, y, size);
+    enemies.push(enemy);
+  }
+}
+
+function moveEnemies() {
+  for (let i = 0; i < enemies.length; i++) {
+    enemies[i].update();
+  }
+}
+
+function displayEnemies() {
+  for (let i = 0; i < enemies.length; i++) {
+    enemies[i].display();
+  }
+}
