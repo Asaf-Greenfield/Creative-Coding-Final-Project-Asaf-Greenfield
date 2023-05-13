@@ -1,0 +1,142 @@
+// game 1 version 1 // in processing // movement is good but enemy loads are not // enemies move down only
+
+
+
+//set player speed
+float playerSpeed = 5; 
+int speed; 
+
+class Player {
+  float x, y; // Player position
+  float speed; // Player speed
+  float size; // Player size
+  
+  Player(float x, float y, float speed, float size) {
+    this.x = x;
+    this.y = y;
+    this.speed = speed;
+    this.size = size;
+  }
+  void display() {
+    fill(255, 0, 0);
+    ellipse(x, y, size, size);
+  }
+  
+  void update() {
+    if (keyPressed) { // Check if a key is pressed
+      if (keyCode == LEFT) {
+        x -= speed; // Move left
+      } else if (keyCode == RIGHT) {
+        x += speed; // Move right
+      }
+    }
+    if (mousePressed) { // Check if mouse is pressed
+      float angle = atan2(mouseY - y, mouseX - x); // Calculate angle between player and mouse
+      x += cos(angle) * speed; // Move player in the x-direction based on angle and speed
+      y += sin(angle) * speed; // Move player in the y-direction based on angle and speed
+    }
+  }
+  
+  boolean collidesWith(Enemy enemy) {
+    float distance = dist(x, y, enemy.x, enemy.y);
+    if (distance < (size/2 + enemy.size/2)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
+Player player = new Player(width/2, height - 50, 5, 20); // Create a new player object with starting position, speed, and size
+
+
+void setup() {
+  size(800, 600); // Set the size of the game window
+  background(0); 
+  createEnemies(); 
+}
+
+void draw() {
+  background(0); // Clear the screen
+ player.display(); // Display the player
+  player.update(); 
+  moveEnemies(); // Move the enemies downwards
+  displayEnemies(); // Display the enemies
+   if (frameCount % 30 == 0) {
+   Enemy enemy = new Enemy( 0, 3, 20); // Create a new enemy object with random x-position, starting y-position, speed, and size
+    enemies.add(enemy); // Add enemy object to arraylist
+  }
+  
+  // Display and update all enemies
+  for (int i = 0; i < enemies.size(); i++) {
+    Enemy enemy = enemies.get(i);
+    enemy.display();
+    enemy.update();
+    
+    // Check for collision between player and enemy
+    if (player.collidesWith(enemy)) {
+      if (player.size<enemy.size){
+      textSize(32);
+      fill(255, 255, 0);
+      text("Game Over", width/2 - 80, height/2);
+      noLoop(); // Stop game loop
+      }
+    }
+    if (player.collidesWith(enemy)) {
+      if (player.size>enemy.size){
+       player.size+=enemy.size;
+       enemy.size=0;
+      }
+    }
+  }
+}
+
+
+//ArrayList<Enemy> enemies = new ArrayList<Enemy>(); // Create an array list to hold the enemy objects
+float enemySpeed = 2; // Set the enemy's movement speed
+ArrayList<Enemy> enemies = new ArrayList<Enemy>();
+
+class Enemy {
+  float x;
+  float y;
+  float size;
+  
+  Enemy(float x, float y, float size) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+  }
+  
+  void move() {
+    y += enemySpeed; // Move the enemy downwards
+  }
+  
+  void display() {
+    fill(255, 0, 0); // Set the enemy's color to red
+    ellipse(x, y, size, size); // Draw the enemy as a red circle
+  }
+  void update() {
+    y += speed; // Move enemy down
+  }
+}
+
+void createEnemies() {
+  for (int i = 0; i < 10; i++) {
+    float x = random(50, width-50); // Set the enemy's x position to a random value within the game window
+    float y = random(-500, -50); // Set the enemy's y position to a random value above the game window
+    float size = random(5, 50); // Set the enemy's size to a random value between 20 and 50
+    enemies.add(new Enemy(x, y, size)); // Add the new enemy object to the array list
+  }
+}
+
+void moveEnemies() {
+  for (int i = 0; i < enemies.size(); i++) {
+    enemies.get(i).move(); // Move each enemy downwards
+  }
+}
+
+void displayEnemies() {
+  for (int i = 0; i < enemies.size(); i++) {
+    enemies.get(i).display(); // Display each enemy object
+  }
+}
