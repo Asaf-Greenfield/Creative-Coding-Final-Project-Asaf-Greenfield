@@ -1,0 +1,143 @@
+// Game 2 FINAL // target moves continously to the left // if target offscreen score -1
+// arrows offscreen bug fixed
+// score reaches 10 game over
+// arrows can reach 
+// arrows rotate while moving
+
+let bow;
+let target;
+let arrows = [];
+let score = 0;
+
+function setup() { /// setup with bow and target
+  createCanvas(800, 600);
+  bow = new Bow();
+  target = new Target();
+}
+
+function draw() {
+  background(220);
+  
+  bow.update();
+  bow.show();
+  
+  target.update();
+  target.show();
+  
+  arrows.forEach(arrow => { //checks if arrow hits, also removes arrow if its offscren
+    arrow.update();
+    arrow.show();
+    
+    if (arrow.hits(target)) {
+      score++;
+      target.reset();
+    }
+    
+    if (arrow.offscreen()) {
+      arrow.remove();
+    }
+  });
+  
+  textSize(24);
+  text(`Score: ${score}/10`, 20, 30);
+  if (score >= 10) {
+    textSize(48);
+    text("You Win!", width/2 - 100, height/2);
+    noLoop(); // stop the game loop
+  }
+}
+
+function keyPressed() { // checks if space bar is pressed to release arrow
+  if (key === " " && arrows.length < 1) {
+    arrows.push(new Arrow(bow.pos, bow.angle));
+  } 
+}
+
+class Bow { // creates bow that can rotate  depending where mouse is aimed
+  constructor() {
+    this.pos = createVector(50, height / 2);
+    this.angle = 0;
+  }
+  
+  update() {
+    this.angle = atan2(mouseY - this.pos.y, mouseX - this.pos.x);
+  }
+  
+  show() {
+    push();
+    translate(this.pos.x, this.pos.y);
+    rotate(this.angle);
+    fill(200);
+    rect(0, -10, 50, 20);
+    pop();
+  }
+}
+
+class Arrow { // arrow class, hardest
+  constructor(pos, angle) {
+    this.pos = pos.copy();
+    this.angle = angle;
+    this.vel = p5.Vector.fromAngle(angle).mult(20); // vector for velocity, moves with angle and speed 20
+    this.acc = createVector(0, 0.5); // creates acceleration vector, y direction to mimic gravity
+    this.size = 10;
+    this.r = this.size / 2;
+    this.color = color(255, 0, 0); // arrow is red
+  }
+  
+  update() { // updates with acceleration gravity and angle of motion
+    this.vel.add(this.acc);
+    this.pos.add(this.vel);
+    this.angle = this.vel.heading();
+  }
+  
+  show() { //shows arrow as a triangle, rotates it with angle, I used a matrix to move it
+    push();
+    translate(this.pos.x, this.pos.y);
+    rotate(this.angle);
+    fill(this.color);
+    triangle(0, 0, this.size, this.r, this.size, -this.r);
+    pop();
+  }
+  
+  offscreen() { // checks if arrow offscrene
+    return (this.pos.x > width || this.pos.x < 0 || this.pos.y > height || this.pos.y < 0);
+  }
+  
+  hits(target) { // checks if arrow hits
+    let d = dist(this.pos.x, this.pos.y, target.pos.x, target.pos.y);
+    return (d < target.r);
+  }
+  
+  remove() { // removes arrow from array of arrows
+    arrows.splice(arrows.indexOf(this), 1);
+  }
+}
+
+class Target { // create target class
+  constructor() {
+    this.pos = createVector(width - 50, random(height)); // initialize target at right edge of screen
+    this.vel = createVector(random(-3,-10), 0); // move target left
+    this.r = 30;  // radius of target
+    this.color = color(0, 255, 0); // color of target
+  }
+  
+  update() { // updates position of target, position stored in this.pos
+    this.pos.add(this.vel);
+    if (this.pos.x < -this.r) {
+      this.reset(); // reset once off screen
+      score--; //lower score if you miss one
+    }
+  }
+  
+  show() { //shows target as circle with radius
+    push();
+    translate(this.pos.x, this.pos.y);
+    fill(this.color);
+    ellipse(0, 0, this.r * 2);
+    pop();
+  }
+  
+  reset() { // reset once off screen or hit
+    this.pos = createVector(width + this.r, random(height));
+  }
+}
