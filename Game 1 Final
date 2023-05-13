@@ -1,0 +1,167 @@
+// game 1 Final version // p5js // enemies are generated from all sides and regerenate from all sides // enemy size is based on player size // game ends when player is 250 pixels // player green // play controlled by mouse
+
+let player; // creates player
+let enemies = []; //creates enemy array
+let isMousePressed = false; // check if mouse is pressed
+
+function setup() {
+  createCanvas(800, 800);
+  player = new Player(width/2, height/2, 5, 20); // new player with size and initial placement
+  createEnemies(); // create enemies
+  loop();
+}
+
+function draw() {
+  background(0);
+  if (player) { // display and update player position
+    player.display();
+    if (isMousePressed) {
+      player.update();
+    }
+    for (let i = 0; i < enemies.length; i++) { // display and update enemies
+      let enemy = enemies[i];
+      enemy.display();
+      enemy.update();
+      if (player.collidesWith(enemy)) { // enemy collides with player and check size difference
+        if (player.size < enemy.size) {
+          textSize(32);
+          fill(255, 255, 0);
+          text("Game Over", width/2 - 80, height/2);
+          noLoop();
+        } else {
+          player.size += enemy.size/6;
+          enemy.size = 0;
+        }
+      }
+    }
+  }
+  moveEnemies();
+  displayEnemies();
+  if (player.size >= 250) { //endgame if over 250
+    textSize(32);
+    fill(255, 255, 0);
+    text("You Win!", width/2 - 60, height/2);
+    noLoop();
+  } else if (frameCount % 30 == 0) { // make new enemies generate the same way as they do in the first place
+  let side = int(random(4)); // generate a random integer between 0 and 3
+  let x, y;
+  let size = random(player.size-20, player.size+20);
+  switch (side) {
+    case 0: // top
+      x = random(0, width);
+      y = -size;
+      break;
+    case 1: // right
+      x = width+size;
+      y = random(0, height);
+      break;
+    case 2: // bottom
+      x = random(0, width);
+      y = height+size;
+      break;
+    case 3: // left
+      x = -size;
+      y = random(0, height);
+      break;
+  }
+  let enemy = new Enemy(x, y, size);
+  enemies.push(enemy);
+}
+  
+  fill(255);
+  textSize(16);
+text("Player Size: " + round(player.size), 20, 40); // display player size
+}
+
+function mousePressed() {
+  isMousePressed = true;
+}
+
+function mouseReleased() {
+  isMousePressed = false;
+}
+
+class Player { // creates player with x y positions , speed, and size
+  constructor(x, y, speed, size) {
+    this.x = x;
+    this.y = y;
+    this.speed = speed;
+    this.size = size;
+  }
+
+  display() { 
+    fill(0, 255, 0);
+    ellipse(this.x, this.y, this.size, this.size);
+  }
+
+  update() { // function to move class player
+    let angle = atan2(mouseY - this.y, mouseX - this.x);
+    this.x += cos(angle) * this.speed;
+    this.y += sin(angle) * this.speed;
+  }
+
+  collidesWith(enemy) { // check colision
+    let distance = dist(this.x, this.y, enemy.x, enemy.y);
+    return distance < (this.size/2 + enemy.size/2);
+  }
+}
+
+
+class Enemy { // creates enemy class with x y and size, prepares movement with angle
+  constructor(x, y, size) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.speed = 2;
+    this.angle = atan2(height/2 - this.y, width/2 - this.x);
+  }
+
+  display() { // displays enemy
+    fill(255, 0, 0);
+    ellipse(this.x, this.y, this.size, this.size);
+  }
+
+  update() { // moves enemy
+    this.x += cos(this.angle) * this.speed;
+    this.y += sin(this.angle) * this.speed;
+  }
+
+} 
+function createEnemies() {
+  for (let i = 0; i < 20; i++) {
+    let x, y, angle;
+    let side = Math.floor(random(4)); // random number between 0 and 3 to select which side to spawn from
+    if (side === 0) { // spawn from top
+      x = random(0, width);
+      y = random(-200, 0);
+      angle = random(PI/2, 3*PI/2);
+    } else if (side === 1) { // spawn from right
+      x = random(width, width + 200);
+      y = random(0, height);
+      angle = random(PI, 2*PI);
+    } else if (side === 2) { // spawn from bottom
+      x = random(0, width);
+      y = random(height, height + 200);
+      angle = random(-PI/2, PI/2);
+    } else { // spawn from left
+      x = random(-200, 0);
+      y = random(0, height);
+      angle = random(0, PI);
+    }
+    let size = random(player.size - 20, player.size + 20);
+    size = constrain(size, 5, 50);
+    let enemy = new Enemy(x, y, size);
+    enemy.angle = angle;
+    enemies.push(enemy);
+  }
+}
+function moveEnemies() { // moves ALL enemies 
+  for (let i = 0; i < enemies.length; i++) {
+    enemies[i].update();
+  }
+}
+function displayEnemies() { // function to display ALL enemies
+  for (let i = 0; i < enemies.length; i++) {
+    enemies[i].display();
+  }
+}
