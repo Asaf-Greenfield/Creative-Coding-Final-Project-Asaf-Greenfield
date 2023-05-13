@@ -1,0 +1,139 @@
+// game 1 version 3 // p5js // enemies move from all sides of screen // game ends when player is 250 big // player size is displayed
+
+let player;
+let enemies = [];
+let isMousePressed = false;
+
+function setup() {
+  createCanvas(800, 600);
+  player = new Player(width/2, height/2, 5, 20);
+  createEnemies();
+  loop();
+}
+
+function draw() {
+  background(0);
+  if (player) {
+    player.display();
+    if (isMousePressed) {
+      player.update();
+    }
+    for (let i = 0; i < enemies.length; i++) {
+      let enemy = enemies[i];
+      enemy.display();
+      enemy.update();
+      if (player.collidesWith(enemy)) {
+        if (player.size < enemy.size) {
+          textSize(32);
+          fill(255, 255, 0);
+          text("Game Over", width/2 - 80, height/2);
+          noLoop();
+        } else {
+          player.size += enemy.size;
+          enemy.size = 0;
+        }
+      }
+    }
+  }
+  moveEnemies();
+  displayEnemies();
+  if (player.size >= 250) {
+    textSize(32);
+    fill(255, 255, 0);
+    text("You Win!", width/2 - 60, height/2);
+    noLoop();
+  } else if (frameCount % 30 == 0) {
+    let enemy = new Enemy(random(50, width-50), random(-500, -50), random(5, 50));
+    enemies.push(enemy);
+  }
+  
+  fill(255);
+  textSize(16);
+text("Player Size: " + round(player.size), 20, 40);
+}
+
+function mousePressed() {
+  isMousePressed = true;
+}
+
+function mouseReleased() {
+  isMousePressed = false;
+}
+
+class Player {
+  constructor(x, y, speed, size) {
+    this.x = x;
+    this.y = y;
+    this.speed = speed;
+    this.size = size;
+  }
+
+  display() {
+    fill(255, 0, 0);
+    ellipse(this.x, this.y, this.size, this.size);
+  }
+
+  update() {
+    let angle = atan2(mouseY - this.y, mouseX - this.x);
+    this.x += cos(angle) * this.speed;
+    this.y += sin(angle) * this.speed;
+  }
+
+  collidesWith(enemy) {
+    let distance = dist(this.x, this.y, enemy.x, enemy.y);
+    return distance < (this.size/2 + enemy.size/2);
+  }
+}
+
+
+class Enemy {
+  constructor(x, y, size) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.speed = 2;
+    this.angle = atan2(height/2 - this.y, width/2 - this.x);
+  }
+
+  display() {
+    fill(255, 0, 0);
+    ellipse(this.x, this.y, this.size, this.size);
+  }
+
+  update() {
+    this.x += cos(this.angle) * this.speed;
+    this.y += sin(this.angle) * this.speed;
+  }
+}
+
+function createEnemies() {
+  for (let i = 0; i < 10; i++) {
+    let x, y, angle;
+    if (random(1) < 0.5) {
+      // create enemy from top or bottom of screen
+      x = random(0, width);
+      y = random([0, height]);
+      angle = atan2(height/2 - y, width/2 - x);
+    } else {
+      // create enemy from left or right of screen
+      x = random([0, width]);
+      y = random(0, height);
+      angle = atan2(height/2 - y, width/2 - x);
+    }
+    let size = random(5, 50);
+    let enemy = new Enemy(x, y, size);
+    enemy.angle = angle;
+    enemies.push(enemy);
+  }
+}
+
+function moveEnemies() {
+  for (let i = 0; i < enemies.length; i++) {
+    enemies[i].update();
+  }
+}
+function displayEnemies() {
+  for (let i = 0; i < enemies.length; i++) {
+    enemies[i].display();
+  }
+}
